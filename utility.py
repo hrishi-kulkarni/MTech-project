@@ -58,7 +58,7 @@ pwm_bucket = gpio.PWM(BUCKET_LED,PWM_FREQ)
 
 #database connectivity
 try:
-	db = mysql.connector.connect(user='root',password='',host='192.168.43.50',database='operatorpersonalization')
+	db = mysql.connector.connect(user='root',password='',host='192.168.43.44',database='operatorpersonalization')
 	cur = db.cursor()
 except:
 	print("database connection error")
@@ -82,85 +82,33 @@ except Exception as e:
 
 def Disp_DefaultScreen():
 	lcd.clear()
-	time.sleep(0.002)
 	lcd.write_string('Scan Fingerprint')
-	time.sleep(0.002)
 	lcd.cursor_pos=(1,0)
-	time.sleep(0.002)
 	lcd.write_string('to Crank machine')
 
 ################# Owner Screen ##########################
 
 #if id == Owner load this screen
-def Disp_OwnerScreen(id):
+def Disp_OwnerScreen():
 	lcd.clear()
-	time.sleep(0.003)
-	lcd.write_string("Welcome Ownr%s" %id)  
+	lcd.write_string("Welcome Ownr")  
 	# For formated string use:  lcd.write_string("Welcome %s" %Var Name) 
-	time.sleep(0.003)
 	lcd.cursor_pos=(1,0)
-	time.sleep(0.003)
 	lcd.write_string('Add Opr')
-	time.sleep(0.003)
 	lcd.cursor_pos=(1,13)
-	lcd.write_string('Off')
+	lcd.write_string('Logout')
 	#if SW2=Pressed Load Default Screen
-
-
-#if SW1= pressed, load this screen
-def Disp_OwnerScreen_1_1():
-	lcd.clear()
-	time.sleep(0.003)
-	lcd.write_string('Scan Fingergerprint')
-	time.sleep(0.003)
-	lcd.cursor_pos=(1,0)
-	lcd.write_string('Put-Remove-Put')
-
-	#call enroll function in library
-
-
-#After 1st scan ask to remove finger
-def Disp_OwnerScreen_1_2():
-	lcd.clear()
-	time.sleep(0.003)
-	lcd.write_string('Remove')
-	
-
-#After remove load this screen
-def Disp_OwnerScreen_1_3():
-	lcd.clear()
-	time.sleep(0.003)
-	lcd.write_string('Put Same')
-	time.sleep(0.003)
-	lcd.cursor_pos=(1,0)
-	lcd.write_string('Finger Again')
-
-
-#After successful enroll show this screen
-def Disp_OwnerScreen_1_4():
-	lcd.clear()
-	time.sleep(0.003)
-	lcd.write_string('Opr Add Success')
-	time.sleep(0.003)
-	lcd.cursor_pos=(1,0)
-	lcd.write_string('Default Settings')
-	#Jump to Default Screen after this screen
-
 
 ##################### Operator Screens ####################################
 
 #Load this screen if id == Operator, start opr timer in seconds
 def Disp_OprScreen(id):
 	lcd.clear()
-	time.sleep(0.001)
 	lcd.write_string("Operator %s" %id)
-	time.sleep(0.001)
 	lcd.cursor_pos=(1,0)
 	lcd.write_string('Opr')
-	time.sleep(0.001)
 	lcd.cursor_pos=(1,6)
 	lcd.write_string('Sett')
-	time.sleep(0.001)
 	lcd.cursor_pos=(1,13)
 	lcd.write_string('Yld')
 	#Make crank LED ON
@@ -168,15 +116,11 @@ def Disp_OprScreen(id):
 #Load this screen if SW1=Pressed for Opr
 def Disp_OprScreen_1(id):
 	lcd.clear()
-	time.sleep(0.001)
 	lcd.write_string("Operator %s" %id)
-	time.sleep(0.001)
 	lcd.cursor_pos=(1,0)
 	lcd.write_string('Boom')
-	time.sleep(0.001)
 	lcd.cursor_pos=(1,7)
 	lcd.write_string('Bkt')
-	time.sleep(0.001)
 	lcd.cursor_pos=(1,13)
 	lcd.write_string('Off')
 
@@ -184,17 +128,16 @@ def Disp_OprScreen_1(id):
 	#if SW2= Pressed, Cmd --> Bucket, record time in secods
 
 #Load this screen if SW2=Pressed for Sett
-def Disp_OprScreen_2(id):
+def Disp_OprScreen_2(id,boom_spd,bucket_spd):
 	lcd.clear()
-	time.sleep(0.001)
-	lcd.write_string("Operator %s Sett" %id)
-	time.sleep(0.001)
+	lcd.cursor_pos=(0,0)
+	lcd.write_string("%s" %boom_spd)
+	lcd.cursor_pos=(0,7)
+	lcd.write_string("%s" %bucket_spd)
 	lcd.cursor_pos=(1,0)
 	lcd.write_string('Boom')
-	time.sleep(0.001)
 	lcd.cursor_pos=(1,7)
 	lcd.write_string('Bkt')
-	time.sleep(0.001)
 	lcd.cursor_pos=(1,12)
 	lcd.write_string('Save')
 
@@ -205,12 +148,10 @@ def Disp_OprScreen_2(id):
 #Load this screen if SW3=Pressed for Yld
 def Disp_OprScreen_3(id,yld,fuel):
 	lcd.clear()
-	time.sleep(0.001)
-	lcd.write_string("Opr%s Yld:" %id)
-	time.sleep(0.001)
+	lcd.write_string("OPR%s Yld:" %id)
 	lcd.write_string("%s" %yld)
 	lcd.cursor_pos=(1,0)
-	#lcd.write_string("Fuel Use:%sltr", %fuel)			#Debug
+	lcd.write_string("Fuel Use:%sltr" %fuel)			#Debug
 
 ################### Function to check SW pressed ##############################################
 def SW1Pressed():
@@ -227,23 +168,26 @@ def SW3Pressed():
  ################# Function to set Actuatotrs with duty cycle ########################################
 def Cmd_Boom(duty_cycle):
 	pwm_boom.start(duty_cycle)
+	pwm_boom.ChangeDutyCycle(duty_cycle)
 	
 def Cmd_Bucket(duty_cycle):
 	pwm_bucket.start(duty_cycle)
+	pwm_bucket.ChangeDutyCycle(duty_cycle)
 
-def Insert_Operator():
-	pass
+def Cmd_Crank(crank):
+	if crank==1:
+		gpio.output(CRANK_LED, gpio.HIGH)
+	elif crank==0:
+		gpio.output(CRANK_LED, gpio.LOW)
 
-def Insert_Owner():
-	pass
-
-def Update_Settings():
-	pass
+############################  Enrolling finger ############################################################
 
 def enrollFinger():
+	lcd.clear()
 	lcd.write_string("Enrolling Finger")
 	time.sleep(2)
 	print('Waiting for finger...')
+	lcd.clear()
 	lcd.write_string("Place Finger")
 	while ( f.readImage() == False ):
 		pass
@@ -252,15 +196,18 @@ def enrollFinger():
 	positionNumber = result[0]
 	if ( positionNumber >= 0 ):
 		print('Template already exists at position #' + str(positionNumber))
-		lcd.write_string("Finger ALready")
+		lcd.clear()
+		lcd.write_string("Finger Already")
 		lcd.cursor_pos(1,0)
 		lcd.write_string("   Exists     ")
 		time.sleep(2)
 		return
 	print('Remove finger...')
+	lcd.clear()
 	lcd.write_string("Remove Finger")
 	time.sleep(2)
 	print('Waiting for same finger again...')
+	lcd.clear()
 	lcd.write_string("Place Finger")
 	lcd.write_string("   Again    ")
 	while ( f.readImage() == False ):
@@ -268,6 +215,7 @@ def enrollFinger():
 	f.convertImage(0x02)
 	if ( f.compareCharacteristics() == 0 ):
 		print ("Fingers do not match")
+		lcd.clear()
 		lcd.write_string("Finger Did not")
 		lcd.write_string("   Mactched   ")
 		time.sleep(2)
@@ -275,9 +223,10 @@ def enrollFinger():
 	f.createTemplate()
 	positionNumber = f.storeTemplate()
 	print('Finger enrolled successfully!')
-	lcd.write_string("Stored at Pos:")
+	lcd.clear()
+	lcd.write_string("OPR added:")
 	lcd.write_string(str(positionNumber))
-	lcd.write_string("successfully")
+	lcd.write_string("success")
 	print('New template position #' + str(positionNumber))
 	time.sleep(2)
 	query = "INSERT INTO operator VALUES(%s,%s,%s,%s,%s,%s)"
@@ -294,10 +243,12 @@ def enrollFinger():
 
 
 
-#main________________________
+################################# MAIN #########################################################
 while(True):
+	Cmd_Crank(0)
+	print('Reached at BIG WHILE TRUE, made crank 0')
 	Disp_DefaultScreen()
-	print("hello")
+	print('Showing MAIN SCREEN to SCAN FINGERPRINT')
 	try:
 		print('Waiting for finger...')
 		while( f.readImage() == False ):
@@ -309,9 +260,19 @@ while(True):
 		position_id = result[0]
 		#accuracyScore = result[1]
 		if position_id == -1 :
-			print('No match found!')
-			lcd.write_string('No match found')
+			Cmd_Crank(0)
+			print('No match found!, cant crank')
+			lcd.clear()
+			lcd.write_string("INVALID LOGIN")
+			lcd.cursor_pos=(1,0)
+			lcd.write_string("Can't CRANK")
+			time.sleep(5)
 		else:
+			Cmd_Crank(1)
+			lcd.clear()
+			lcd.write_string("Machine Cranked")
+			print('Success, Machine cranked')
+			time.sleep(5)
 			query_opr = "SELECT * FROM operator WHERE ID=%s"
 			cur.execute(query_opr, (position_id,))
 			rows_opr = cur.fetchall()
@@ -328,75 +289,131 @@ while(True):
 				end_bucket = 0
 				tot_boom = 0
 				tot_bucket = 0
+				print('Initialized: \nstart_login_time, start_boom, end_boom, start_bucket, end_bucket, tot_boom, tot_bucket')
+				print(start_login_time, start_boom, end_boom, start_bucket, end_bucket, tot_boom, tot_bucket)
 
 				for row in rows_opr:
 					login_time = row[2]
 					operation_time = row[3]
 					boom_speed = row[4]
 					bucket_speed = row[5]
+				
+				print('Data fetched from DB\n')
+				print('login_time, operation_time, boom_speed, bucket_speed\n')
+				print(login_time, operation_time, boom_speed, bucket_speed)
 
 				#collected all parameters of logged in operator
 				#call operator main screen
-				while (is_opr == True)
-				{
+				while True:
 					Disp_OprScreen(position_id)
-					print(login_time, operation_time, boom_speed, bucket_speed)
+					print('Welcome OPR Main Screen')
 					if SW1Pressed():	#GOTO operation screen
-						while(True)
-						{
+						print('SW1 Pressed in OPR Main Screen, came in Boom and Bucket Oerations')
+						while True:
 							Disp_OprScreen_1(position_id)
+							print('Displaying OPR Operation Screen')
+							time.sleep(2)
 							if SW1Pressed():
+								print('In OPR Operation Screen: SW1 Pressed')
 								start_boom = time.time()
+								print('Started recording Boom Time:',start_boom)
 								while SW1Pressed():
 									Cmd_Boom(int(boom_speed))
+									print('Boom commanded:',int(boom_speed))
+								Cmd_Boom(0)
+								print('Boom Command Released')
 								end_boom = time.time()
+								print('Boom End Time:',end_boom)
 								tot_boom += (end_boom - start_boom)
+								print('tot_boom:',tot_boom)
+								
 							if SW2Pressed():
+								print('In OPR Operation Screen: SW2 Pressed')
 								start_bucket = time.time()
-								while SW2Pressed():
+								print('Started recording Bucket Time:',start_bucket)
+							 	while SW2Pressed():
 									Cmd_Bucket(int(bucket_speed))
+									print('Bucket Commanded:',int(bucket_speed))
+								Cmd_Bucket(0)
+								print('Bucket Command Released')
 								end_bucket = time.time()
+								print('end_bucket:',end_bucket)
 								tot_bucket += (end_bucket - start_bucket)
+								print('tot_bucket:',tot_bucket)
+
 							if SW3Pressed():
+								print('In OPR Operation Screen: SW3 Pressed, Logout NOW, Calculate various times')
 								end_login_time = time.time()
-								login_time += (end_login_time - start_login_time)
-								operation_time += (tot_boom + tot_bucket)
+								print('end_login_time:',end_login_time)
+								login_time = (login_time + (end_login_time - start_login_time))
+								print('login_time',login_time)
+								operation_time = (operation_time + (tot_boom + tot_bucket))
+								print('operation_time:',operation_time)
 								try:
+									print('Trying to commit timings in DB')
 									cur.execute("UPDATE operator SET LoginTime=%s WHERE ID=%s", (str(login_time), str(position_id),))
+									print('cur.execute: login time',login_time)
 									cur.execute("UPDATE operator SET OperationTime=%s WHERE ID=%s", (str(operation_time), str(position_id),))
+									print('cur.execute: operation time',operation_time)
 									db.commit()
+									print('Timings comitted in DB')
 								except:
 									print("DB UPDATE TIME ERROR")
-						}
+								break
 
 					elif SW2Pressed():	#Modify settings
-						Disp_OprScreen_2(position_id)
+						print('SW2 pressed in OPR Main Screen, came into Modify Settings')
+						lcd.clear()
+						lcd.cursor_pos=(0,0)
+						lcd.write_string("Modify OPR%s Sett" %id)
+						time.sleep(2)
+						Disp_OprScreen_2(position_id,boom_speed,bucket_speed)
 						boom_speed = int(boom_speed)
 						bucket_speed = int(bucket_speed)
 						while SW3Pressed()==False:		#while settings not saved
 							if SW1Pressed():
+								print('SW1 Pressed, modifying BOOM SPD')
 								boom_speed = (boom_speed+5)%100
+								print('Displaying Updated Boom SPD on LCD')
+								Disp_OprScreen_2(position_id,boom_speed,bucket_speed)
 								if boom_speed<5:
 									boom_speed = 5
+								print('Updated Boom SPD:',boom_speed)
 							#REQUIRES DISPLAY OF CURRENT UNSAVED CHANGES IN SPEED
 							elif SW2Pressed():
+								print('SW2 Pressed, Modifying BUCKET SPD')
 								bucket_speed = (bucket_speed+5)%100
+								print('Displaying Updated Bucket SPD on LCD')
+								Disp_OprScreen_2(position_id,boom_speed,bucket_speed)
 								if bucket_speed < 5:
 									bucket_speed = 5
+								print('Updated Bucket SPD',bucket_speed)
+						print('SW3 Pressed, settings updaated!')
 						try:
+							print('Trying to commit Updated Boom and Bucket SPD in DB')
 							cur.execute("UPDATE operator SET BoomSpeed=%s WHERE ID=%s" (str(boom_speed), str(position_id),))
+							print('cur.execute: Boom SPD',boom_speed)
 							cur.execute("UPDATE operator SET BucketSpeed=%s WHERE ID=%s" (str(bucket_speed), str(position_id),))
+							print('cur.execute: Bucket SPD',bucket_speed)
 							db.commit()
+							print('Updated Boom and Bucket SPD in DB')
 						except:
-							print("DB UPDATE SETTING ERROR")
+							print("DB UPDATE SPD ERROR")
+
 					
 					elif SW3Pressed():		#Display yield screen
+						print('SW3 pressed in OPR Main Screen, came into YLD Screen')
 						operation_time = int(operation_time)
+						print('operation_time',operation_time)
 						login_time = int(login_time)
+						print('login_time',login_time)
 						Disp_OprScreen_3(position_id, (operation_time*100)//login_time, login_time//60)
-				}		
+						print('YLD:',(operation_time*100)//login_time)
+						print('Fuel Used:',login_time//60)
+						time.sleep(5)		
 									
 			else:	#owner
+				print('Owner Fingerprint Detected, came into Owner Section')
 				query_ownr = "SELECT * FROM owner WHERE ID=%s"
 				cur.execute(query_ownr, (position_id,))
 				rows_ownr = cur.fetchall()
@@ -404,21 +421,21 @@ while(True):
 				is_ownr = True
 				for row in rows_ownr:
 					operators_added = row[2]
-				#collected parameters of owner
-				#now display basic screen of owner
-
-				while(is_ownr == True)
-				{
-					Disp_OwnerScreen(position_id)
+				print('collected parameters of owner')
+				
+				while True:
+					print('now displaying main screen of owner')
+					Disp_OwnerScreen()
 
 					#check buttons pressed
 					if SW1Pressed():	#add new operator
+						print('SW1 Pressed to add new Operator with default Settings')
 						enrollFinger()
 					elif SW2Pressed():	#Goto default screen
+						print('OWNER Logout, Goto default screen')
 						break
 					elif SW3Pressed():	#invalid i/p
+						print('Invalid INPUT, Goto default screen')
 						break
-				}
 	except:
-		print('Operation failed!')
-		print('Exception message: ')
+		print('Catched Fingerprint Exception!')

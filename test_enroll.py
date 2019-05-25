@@ -47,7 +47,7 @@ pwm_bucket = gpio.PWM(BUCKET_LED,PWM_FREQ)
 
 #database connectivity
 try:
-	db = mysql.connector.connect(user='root',password='',host='192.168.43.229',database='operatorpersonalization')
+	db = mysql.connector.connect(user='root',password='',host='192.168.0.7',database='operatorpersonalization')
 	cur = db.cursor()
 except:
 	print("database connection error")
@@ -108,8 +108,12 @@ def enrollFinger():
 	lcd.write_string("successfully")
 	print('New template position #' + str(positionNumber))
 	time.sleep(2)
+	'''
 	query = "INSERT INTO operator VALUES(%s,%s,%s,%s,%s,%s)"
 	args = (str(position_id), 'operator'+str(position_id), '0', '0', '50', '50')
+	'''
+	query = "INSERT INTO owner VALUES(%s,%s,%s)"
+	args = (str(position_id), 'owner'+str(position_id), '1')
 	try:
 		cur.execute(query, args)
 		db.commit()
