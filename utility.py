@@ -17,9 +17,9 @@ from pyfingerprint.pyfingerprint import PyFingerprint
 import mysql.connector
 ########### GPIO PIN Defines ########################
 
-SW1=3
+SW1=7
 SW2=5
-SW3=7
+SW3=3
 
 CRANK_LED=11
 BOOM_LED=12
@@ -58,7 +58,7 @@ pwm_bucket = gpio.PWM(BUCKET_LED,PWM_FREQ)
 
 #database connectivity
 try:
-	db = mysql.connector.connect(user='root',password='',host='192.168.43.229',database='operatorpersonalization')
+	db = mysql.connector.connect(user='root',password='',host='192.168.43.50',database='operatorpersonalization')
 	cur = db.cursor()
 except:
 	print("database connection error")
@@ -337,58 +337,64 @@ while(True):
 
 				#collected all parameters of logged in operator
 				#call operator main screen
-				Disp_OprScreen(position_id)
-				print(login_time, operation_time, boom_speed, bucket_speed)
-				if SW1Pressed():	#GOTO operation screen
-					Disp_OprScreen_1(position_id)
-					if SW1Pressed():
-						start_boom = time.time()
-						while SW1Pressed():
-							Cmd_Boom(int(boom_speed))
-						end_boom = time.time()
-						tot_boom += (end_boom - start_boom)
-					if SW2Pressed():
-						start_bucket = time.time()
-						while SW2Pressed():
-							Cmd_Bucket(int(bucket_speed))
-						end_bucket = time.time()
-						tot_bucket += (end_bucket - start_bucket)
-					if SW3Pressed():
-						end_login_time = time.time()
-						login_time += (end_login_time - start_login_time)
-						operation_time += (tot_boom + tot_bucket)
+				while (is_opr == True)
+				{
+					Disp_OprScreen(position_id)
+					print(login_time, operation_time, boom_speed, bucket_speed)
+					if SW1Pressed():	#GOTO operation screen
+						while(True)
+						{
+							Disp_OprScreen_1(position_id)
+							if SW1Pressed():
+								start_boom = time.time()
+								while SW1Pressed():
+									Cmd_Boom(int(boom_speed))
+								end_boom = time.time()
+								tot_boom += (end_boom - start_boom)
+							if SW2Pressed():
+								start_bucket = time.time()
+								while SW2Pressed():
+									Cmd_Bucket(int(bucket_speed))
+								end_bucket = time.time()
+								tot_bucket += (end_bucket - start_bucket)
+							if SW3Pressed():
+								end_login_time = time.time()
+								login_time += (end_login_time - start_login_time)
+								operation_time += (tot_boom + tot_bucket)
+								try:
+									cur.execute("UPDATE operator SET LoginTime=%s WHERE ID=%s", (str(login_time), str(position_id),))
+									cur.execute("UPDATE operator SET OperationTime=%s WHERE ID=%s", (str(operation_time), str(position_id),))
+									db.commit()
+								except:
+									print("DB UPDATE TIME ERROR")
+						}
+
+					elif SW2Pressed():	#Modify settings
+						Disp_OprScreen_2(position_id)
+						boom_speed = int(boom_speed)
+						bucket_speed = int(bucket_speed)
+						while SW3Pressed()==False:		#while settings not saved
+							if SW1Pressed():
+								boom_speed = (boom_speed+5)%100
+								if boom_speed<5:
+									boom_speed = 5
+							#REQUIRES DISPLAY OF CURRENT UNSAVED CHANGES IN SPEED
+							elif SW2Pressed():
+								bucket_speed = (bucket_speed+5)%100
+								if bucket_speed < 5:
+									bucket_speed = 5
 						try:
-							cur.execute("UPDATE operator SET LoginTime=%s WHERE ID=%s", (str(login_time), str(position_id),))
-							cur.execute("UPDATE operator SET OperationTime=%s WHERE ID=%s", (str(operation_time), str(position_id),))
+							cur.execute("UPDATE operator SET BoomSpeed=%s WHERE ID=%s" (str(boom_speed), str(position_id),))
+							cur.execute("UPDATE operator SET BucketSpeed=%s WHERE ID=%s" (str(bucket_speed), str(position_id),))
 							db.commit()
 						except:
-							print("DB UPDATE TIME ERROR")
-
-				elif SW2Pressed():	#Modify settings
-					Disp_OprScreen_2(position_id)
-					boom_speed = int(boom_speed)
-					bucket_speed = int(bucket_speed)
-					while SW3Pressed()==False:		#while settings not saved
-						if SW1Pressed():
-							boom_speed = (boom_speed+5)%100
-							if boom_speed<5:
-								boom_speed = 5
-						#REQUIRES DISPLAY OF CURRENT UNSAVED CHANGES IN SPEED
-						elif SW2Pressed():
-							bucket_speed = (bucket_speed+5)%100
-							if bucket_speed < 5:
-								bucket_speed = 5
-					try:
-						cur.execute("UPDATE operator SET BoomSpeed=%s WHERE ID=%s" (str(boom_speed), str(position_id),))
-						cur.execute("UPDATE operator SET BucketSpeed=%s WHERE ID=%s" (str(bucket_speed), str(position_id),))
-						db.commit()
-					except:
-						print("DB UPDATE SETTING ERROR")
-				
-				elif SW3Pressed():		#Display yield screen
-					operation_time = int(operation_time)
-					login_time = int(login_time)
-					Disp_OprScreen_3(position_id, (operation_time*100)//login_time, login_time//60)
+							print("DB UPDATE SETTING ERROR")
+					
+					elif SW3Pressed():		#Display yield screen
+						operation_time = int(operation_time)
+						login_time = int(login_time)
+						Disp_OprScreen_3(position_id, (operation_time*100)//login_time, login_time//60)
+				}		
 									
 			else:	#owner
 				query_ownr = "SELECT * FROM owner WHERE ID=%s"
@@ -400,15 +406,19 @@ while(True):
 					operators_added = row[2]
 				#collected parameters of owner
 				#now display basic screen of owner
-				Disp_OwnerScreen(position_id)
 
-				#check buttons pressed
-				if SW1Pressed():	#add new operator
-					enrollFinger()
-				elif SW2Pressed():	#Goto default screen
-					continue
-				elif SW3Pressed():	#invalid i/p
-					continue
+				while(is_ownr == True)
+				{
+					Disp_OwnerScreen(position_id)
+
+					#check buttons pressed
+					if SW1Pressed():	#add new operator
+						enrollFinger()
+					elif SW2Pressed():	#Goto default screen
+						break
+					elif SW3Pressed():	#invalid i/p
+						break
+				}
 	except:
 		print('Operation failed!')
 		print('Exception message: ')
